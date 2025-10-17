@@ -1,0 +1,13 @@
+{
+  "SkipFishingMinigame": false,
+  "AutoCastAndReel": false,
+  "AutoLootTreasure": false,
+  "ToggleSkipMinigame": "F5",
+  "ToggleAutoCastReel": "F6",
+  "ToggleAutoLootTreasure": "F7",
+  "EnableQualityByLevel": true,
+  "MaxLevelIridiumChance": 80,
+  "ShowStatusMessages": true,
+  "AutoCastDelay": 500,
+  "AutoReelCheckInterval": 100
+}
