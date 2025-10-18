@@ -1,9 +1,9 @@
 {
   "Name": "Skip Fishing Minigame",
-  "Author": "YourName",
-  "Version": "1.1.0",
-  "Description": "跳过钓鱼小游戏，自动钓鱼，可自定义鱼的品质。",
-  "UniqueID": "YourName.SkipFishing",
+  "Author": "RheinXenon",
+  "Version": "1.2.0",
+  "Description": "跳过钓鱼小游戏，自动钓鱼，可随等级提升自定义鱼的品质。",
+  "UniqueID": "RheinXenon.SkipFishing",
   "UpdateKeys": [],
   "MinimumApiVersion": "4.0.0",
   "EntryDll": "SkipFishing.dll",
