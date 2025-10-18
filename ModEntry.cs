@@ -127,6 +127,14 @@ namespace SkipFishing
                 setValue: value => this.Config.EnableAutoLootTreasure = value
             );
 
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "最远距离抛竿",
+                tooltip: () => "勾选后将瞬间以最大距离抛竿，无需蓄力过程\n配合自动抛竿功能使用效果更佳\n手动抛竿时只需点击即可最大距离抛出",
+                getValue: () => this.Config.EnableMaxCastDistance,
+                setValue: value => this.Config.EnableMaxCastDistance = value
+            );
+
             // === 品质配置部分 ===
             configMenu.AddSectionTitle(
                 mod: this.ModManifest,
@@ -199,10 +207,44 @@ namespace SkipFishing
             if (!this.Config.ModEnabled)
                 return;
 
+            // 处理最远距离抛竿
+            if (this.Config.EnableMaxCastDistance)
+            {
+                this.HandleMaxCastDistance();
+            }
+
             // 处理自动抛竿和收杆
             if (this.Config.EnableAutoCastAndReel)
             {
                 this.HandleAutoCastAndReel();
+            }
+        }
+
+        /// <summary>处理最远距离抛竿逻辑。</summary>
+        private void HandleMaxCastDistance()
+        {
+            var player = Game1.player;
+            if (player?.CurrentTool is not FishingRod rod)
+                return;
+
+            // 检查是否正在蓄力准备抛竿
+            // isTimingCast 为 true 表示玩家正在按住使用工具键蓄力
+            try
+            {
+                var isTimingCast = this.Helper.Reflection.GetField<bool>(rod, "isTimingCast").GetValue();
+                if (isTimingCast)
+                {
+                    // 将蓄力瞬间设置为最大值（1.0f = 100%）
+                    this.Helper.Reflection.GetField<float>(rod, "castingPower").SetValue(1.0f);
+                    
+                    // 立即触发抛竿，无需等待玩家松开按键
+                    // 通过设置 castingChosenCountdown 来触发自动松开
+                    this.Helper.Reflection.GetField<float>(rod, "castingChosenCountdown").SetValue(0f);
+                }
+            }
+            catch
+            {
+                // 某些情况下可能无法访问私有字段，静默处理
             }
         }
 
@@ -289,9 +331,30 @@ namespace SkipFishing
             {
                 var player = Game1.player;
                 
-                // 模拟按下使用工具键
-                player.lastClick = player.GetToolLocation();
-                player.BeginUsingTool();
+                // 如果启用了最大距离抛竿，直接设置最大力量并抛竿
+                if (this.Config.EnableMaxCastDistance)
+                {
+                    // 设置抛竿力量为最大值
+                    this.Helper.Reflection.GetField<float>(rod, "castingPower").SetValue(1.0f);
+                    
+                    // 设置抛竿位置
+                    player.lastClick = player.GetToolLocation();
+                    
+                    // 开始使用工具（这会触发抛竿动作）
+                    player.BeginUsingTool();
+                    
+                    // 标记为正在计时抛竿（触发抛竿流程）
+                    this.Helper.Reflection.GetField<bool>(rod, "isTimingCast").SetValue(true);
+                    
+                    // 设置倒计时为0，立即触发抛竿
+                    this.Helper.Reflection.GetField<float>(rod, "castingChosenCountdown").SetValue(0f);
+                }
+                else
+                {
+                    // 不启用最大距离时，使用默认的最小力量抛竿
+                    player.lastClick = player.GetToolLocation();
+                    player.BeginUsingTool();
+                }
                 
                 // 不在这里设置 isAutoFishing = true
                 // 该标志只应在收杆后设置，以防止重复触发收杆
@@ -541,6 +604,7 @@ namespace SkipFishing
                         if (this.Config.EnableSkipFishingMinigame) enabledFeatures.Add("跳过小游戏");
                         if (this.Config.EnableAutoCastAndReel) enabledFeatures.Add("自动抛收竿");
                         if (this.Config.EnableAutoLootTreasure) enabledFeatures.Add("自动取宝箱");
+                        if (this.Config.EnableMaxCastDistance) enabledFeatures.Add("最远距离抛竿");
                         
                         if (enabledFeatures.Count > 0)
                         {

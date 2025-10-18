@@ -24,6 +24,9 @@ namespace SkipFishing
         /// <summary>是否启用自动取出宝箱物品功能。</summary>
         public bool EnableAutoLootTreasure { get; set; } = false;
 
+        /// <summary>是否启用最远距离抛竿功能。</summary>
+        public bool EnableMaxCastDistance { get; set; } = false;
+
         /*********
         ** 按键配置
         *********/
