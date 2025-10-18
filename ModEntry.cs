@@ -78,36 +78,6 @@ namespace SkipFishing
                 save: () => this.Helper.WriteConfig(this.Config)
             );
 
-            // === 功能开关部分 ===
-            configMenu.AddSectionTitle(
-                mod: this.ModManifest,
-                text: () => "功能开关"
-            );
-
-            configMenu.AddBoolOption(
-                mod: this.ModManifest,
-                name: () => "跳过钓鱼小游戏",
-                tooltip: () => "启用后将自动完成钓鱼小游戏",
-                getValue: () => this.Config.SkipFishingMinigame,
-                setValue: value => this.Config.SkipFishingMinigame = value
-            );
-
-            configMenu.AddBoolOption(
-                mod: this.ModManifest,
-                name: () => "自动抛竿和收杆",
-                tooltip: () => "启用后将自动抛竿并在鱼咬钩时自动收杆",
-                getValue: () => this.Config.AutoCastAndReel,
-                setValue: value => this.Config.AutoCastAndReel = value
-            );
-
-            configMenu.AddBoolOption(
-                mod: this.ModManifest,
-                name: () => "自动取出宝箱物品",
-                tooltip: () => "启用后将自动取出钓鱼宝箱中的所有物品",
-                getValue: () => this.Config.AutoLootTreasure,
-                setValue: value => this.Config.AutoLootTreasure = value
-            );
-
             // === 按键配置部分 ===
             configMenu.AddSectionTitle(
                 mod: this.ModManifest,
@@ -116,26 +86,45 @@ namespace SkipFishing
 
             configMenu.AddKeybindList(
                 mod: this.ModManifest,
-                name: () => "切换跳过钓鱼小游戏",
-                tooltip: () => "按下此键组合切换跳过钓鱼小游戏功能的开关状态",
-                getValue: () => this.Config.ToggleSkipMinigame,
-                setValue: value => this.Config.ToggleSkipMinigame = value
+                name: () => "切换Mod总开关",
+                tooltip: () => "按下此键组合切换整个Mod的开关状态\n关闭后所有功能都将停用",
+                getValue: () => this.Config.ToggleMod,
+                setValue: value => this.Config.ToggleMod = value
             );
 
-            configMenu.AddKeybindList(
+            // === 功能选择部分 ===
+            configMenu.AddSectionTitle(
                 mod: this.ModManifest,
-                name: () => "切换自动抛竿收杆",
-                tooltip: () => "按下此键组合切换自动抛竿和收杆功能的开关状态",
-                getValue: () => this.Config.ToggleAutoCastReel,
-                setValue: value => this.Config.ToggleAutoCastReel = value
+                text: () => "功能选择"
             );
 
-            configMenu.AddKeybindList(
+            configMenu.AddParagraph(
                 mod: this.ModManifest,
-                name: () => "切换自动取出宝箱",
-                tooltip: () => "按下此键组合切换自动取出宝箱物品功能的开关状态",
-                getValue: () => this.Config.ToggleAutoLootTreasure,
-                setValue: value => this.Config.ToggleAutoLootTreasure = value
+                text: () => "选择在Mod启用时要使用的功能"
+            );
+
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "跳过钓鱼小游戏",
+                tooltip: () => "勾选后将自动完成钓鱼小游戏\n需要Mod总开关启用才能生效",
+                getValue: () => this.Config.EnableSkipFishingMinigame,
+                setValue: value => this.Config.EnableSkipFishingMinigame = value
+            );
+
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "自动抛竿和收杆",
+                tooltip: () => "勾选后将自动抛竿并在鱼咬钩时自动收杆\n需要Mod总开关启用才能生效",
+                getValue: () => this.Config.EnableAutoCastAndReel,
+                setValue: value => this.Config.EnableAutoCastAndReel = value
+            );
+
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "自动取出宝箱物品",
+                tooltip: () => "勾选后将自动取出钓鱼宝箱中的所有物品\n需要Mod总开关启用才能生效",
+                getValue: () => this.Config.EnableAutoLootTreasure,
+                setValue: value => this.Config.EnableAutoLootTreasure = value
             );
 
             // === 品质配置部分 ===
@@ -206,8 +195,12 @@ namespace SkipFishing
             if (!Context.IsWorldReady)
                 return;
 
+            // 检查Mod总开关
+            if (!this.Config.ModEnabled)
+                return;
+
             // 处理自动抛竿和收杆
-            if (this.Config.AutoCastAndReel)
+            if (this.Config.EnableAutoCastAndReel)
             {
                 this.HandleAutoCastAndReel();
             }
@@ -331,14 +324,18 @@ namespace SkipFishing
         /// <summary>在菜单改变时引发的事件。</summary>
         private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
         {
+            // 检查Mod总开关
+            if (!this.Config.ModEnabled)
+                return;
+
             // 处理钓鱼小游戏
-            if (this.Config.SkipFishingMinigame && e.NewMenu is BobberBar bobberBar)
+            if (this.Config.EnableSkipFishingMinigame && e.NewMenu is BobberBar bobberBar)
             {
                 this.SkipFishingMinigame(bobberBar);
             }
 
             // 处理宝箱自动拾取
-            if (this.Config.AutoLootTreasure && e.NewMenu is ItemGrabMenu itemGrabMenu)
+            if (this.Config.EnableAutoLootTreasure && e.NewMenu is ItemGrabMenu itemGrabMenu)
             {
                 this.AutoLootTreasureChest(itemGrabMenu);
             }
@@ -524,49 +521,40 @@ namespace SkipFishing
             if (!Context.IsWorldReady)
                 return;
 
-            // 切换跳过钓鱼小游戏功能
-            if (this.Config.ToggleSkipMinigame.JustPressed())
+            // 切换Mod总开关
+            if (this.Config.ToggleMod.JustPressed())
             {
-                this.Config.SkipFishingMinigame = !this.Config.SkipFishingMinigame;
+                this.Config.ModEnabled = !this.Config.ModEnabled;
                 this.Helper.WriteConfig(this.Config);
                 
                 if (this.Config.ShowStatusMessages)
                 {
-                    string status = this.Config.SkipFishingMinigame ? "已启用" : "已禁用";
-                    Game1.addHUDMessage(new HUDMessage($"跳过钓鱼小游戏: {status}", 2));
+                    string status = this.Config.ModEnabled ? "已启用" : "已禁用";
+                    
+                    // 显示总开关状态
+                    Game1.addHUDMessage(new HUDMessage($"SkipFishing Mod: {status}", 2));
+                    
+                    // 如果启用，显示当前选择的功能
+                    if (this.Config.ModEnabled)
+                    {
+                        List<string> enabledFeatures = new List<string>();
+                        if (this.Config.EnableSkipFishingMinigame) enabledFeatures.Add("跳过小游戏");
+                        if (this.Config.EnableAutoCastAndReel) enabledFeatures.Add("自动抛收竿");
+                        if (this.Config.EnableAutoLootTreasure) enabledFeatures.Add("自动取宝箱");
+                        
+                        if (enabledFeatures.Count > 0)
+                        {
+                            string features = string.Join(", ", enabledFeatures);
+                            Game1.addHUDMessage(new HUDMessage($"已启用功能: {features}", 2));
+                        }
+                        else
+                        {
+                            Game1.addHUDMessage(new HUDMessage("提示: 请在配置菜单中勾选需要的功能", 2));
+                        }
+                    }
                 }
                 
-                this.Monitor.Log($"跳过钓鱼小游戏: {(this.Config.SkipFishingMinigame ? "启用" : "禁用")}", LogLevel.Info);
-            }
-
-            // 切换自动抛竿收杆功能
-            if (this.Config.ToggleAutoCastReel.JustPressed())
-            {
-                this.Config.AutoCastAndReel = !this.Config.AutoCastAndReel;
-                this.Helper.WriteConfig(this.Config);
-                
-                if (this.Config.ShowStatusMessages)
-                {
-                    string status = this.Config.AutoCastAndReel ? "已启用" : "已禁用";
-                    Game1.addHUDMessage(new HUDMessage($"自动抛竿和收杆: {status}", 2));
-                }
-                
-                this.Monitor.Log($"自动抛竿和收杆: {(this.Config.AutoCastAndReel ? "启用" : "禁用")}", LogLevel.Info);
-            }
-
-            // 切换自动取出宝箱功能
-            if (this.Config.ToggleAutoLootTreasure.JustPressed())
-            {
-                this.Config.AutoLootTreasure = !this.Config.AutoLootTreasure;
-                this.Helper.WriteConfig(this.Config);
-                
-                if (this.Config.ShowStatusMessages)
-                {
-                    string status = this.Config.AutoLootTreasure ? "已启用" : "已禁用";
-                    Game1.addHUDMessage(new HUDMessage($"自动取出宝箱: {status}", 2));
-                }
-                
-                this.Monitor.Log($"自动取出宝箱: {(this.Config.AutoLootTreasure ? "启用" : "禁用")}", LogLevel.Info);
+                this.Monitor.Log($"SkipFishing Mod: {(this.Config.ModEnabled ? "启用" : "禁用")}", LogLevel.Info);
             }
         }
     }

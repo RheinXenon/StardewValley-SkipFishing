@@ -7,28 +7,28 @@ namespace SkipFishing
     public class ModConfig
     {
         /*********
-        ** 功能开关
+        ** 总开关
+        *********/
+        /// <summary>Mod总开关，控制所有功能是否启用。</summary>
+        public bool ModEnabled { get; set; } = true;
+
+        /*********
+        ** 功能选择
         *********/
         /// <summary>是否启用跳过钓鱼小游戏功能。</summary>
-        public bool SkipFishingMinigame { get; set; } = true;
+        public bool EnableSkipFishingMinigame { get; set; } = true;
 
         /// <summary>是否启用自动抛竿和收杆功能。</summary>
-        public bool AutoCastAndReel { get; set; } = false;
+        public bool EnableAutoCastAndReel { get; set; } = false;
 
-        /// <summary>是否自动取出宝箱物品。</summary>
-        public bool AutoLootTreasure { get; set; } = false;
+        /// <summary>是否启用自动取出宝箱物品功能。</summary>
+        public bool EnableAutoLootTreasure { get; set; } = false;
 
         /*********
         ** 按键配置
         *********/
-        /// <summary>切换跳过钓鱼小游戏功能的按键。</summary>
-        public KeybindList ToggleSkipMinigame { get; set; } = KeybindList.Parse("F5");
-
-        /// <summary>切换自动抛竿和收杆功能的按键。</summary>
-        public KeybindList ToggleAutoCastReel { get; set; } = KeybindList.Parse("F6");
-
-        /// <summary>切换自动取出宝箱物品功能的按键。</summary>
-        public KeybindList ToggleAutoLootTreasure { get; set; } = KeybindList.Parse("F7");
+        /// <summary>切换Mod总开关的按键。</summary>
+        public KeybindList ToggleMod { get; set; } = KeybindList.Parse("F5");
 
         /*********
         ** 品质配置
